@@ -6,6 +6,8 @@ port: 9091
 
 logs_level: debug
 
+secret: unsecure_secret
+
 authentication_backend:
   file:
     path: ./test/suites/basic/users_database.test.yml
@@ -18,7 +20,7 @@ session:
 
 storage:
   local:
-    path: /tmp/authelia/db
+    path: /tmp/authelia/db.sqlite
 
 # The Duo Push Notification API configuration
 duo_api:

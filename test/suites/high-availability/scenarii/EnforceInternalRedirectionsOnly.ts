@@ -33,7 +33,6 @@ export default function() {
     function CannotRedirectTo(url: string, twoFactor: boolean = true) {
       it(`should redirect to already authenticated page when requesting ${url}`, async function() {
         await VisitPageAndWaitUrlIs(this.driver, `https://login.example.com:8080/#/?rd=${url}`);
-        await FillLoginPageWithUserAndPasswordAndClick(this.driver, 'john', 'password');
         if (twoFactor) {
           await ValidateTotp(this.driver, secret);
           await VerifyIsAlreadyAuthenticatedStage(this.driver);

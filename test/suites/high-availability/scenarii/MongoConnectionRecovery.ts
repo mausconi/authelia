@@ -1,6 +1,5 @@
 import LoginAndRegisterTotp from "../../../helpers/LoginAndRegisterTotp";
 import FullLogin from "../../../helpers/FullLogin";
-import child_process from 'child_process';
 import WithDriver from "../../../helpers/context/WithDriver";
 import Logout from "../../../helpers/Logout";
 import { composeFiles } from '../environment';

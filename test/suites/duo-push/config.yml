@@ -6,6 +6,8 @@ port: 9091
 
 logs_level: debug
 
+secret: very_important_secret
+
 authentication_backend:
   file:
     path: ./test/suites/basic/users_database.test.yml
@@ -19,7 +21,7 @@ session:
 # Configuration of the storage backend used to store data and secrets. i.e. totp data
 storage:
   local:
-    path: /tmp/authelia/db
+    path: /tmp/authelia/db.sqlite
 
 # TOTP Issuer Name
 #

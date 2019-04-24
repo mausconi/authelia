@@ -5,7 +5,7 @@ import RegisterAndLoginTwoFactor from "../../../helpers/behaviors/RegisterAndLog
 
 
 export default function() {
-  describe('When visiting /logout the user is redirected to already logged in page to log out', function() {
+  describe('When visiting https://login.example.com:8080/#/ while authenticated, the user is redirected to already logged in page', function() {
     before(async function() {
       this.driver = await StartDriver();
       await RegisterAndLoginTwoFactor(this.driver, 'john', "password", true);
@@ -16,7 +16,7 @@ export default function() {
     });
 
     it('should redirect the user', async function() {
-      await VisitPage(this.driver, 'https://login.example.com:8080/#/logout');
+      await VisitPage(this.driver, 'https://login.example.com:8080/#/');
       await VerifyIsAlreadyAuthenticatedStage(this.driver);
     });
   });

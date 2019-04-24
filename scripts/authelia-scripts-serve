@@ -16,7 +16,7 @@ if (!config) {
   config = 'config.yml'; // set default config file.;
 }
 
-const server = spawn('/usr/bin/env', ['node', 'dist/server/src/index.js', config]);
+const server = spawn('./dist/authelia', ['-config', config]);
 
 server.stdout.pipe(process.stdout);
 server.stderr.pipe(process.stderr);

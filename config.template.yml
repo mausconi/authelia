@@ -10,6 +10,10 @@ port: 9091
 # Level of verbosity for logs
 logs_level: debug
 
+# The secret used to generate JWT tokens when validating user identity by
+# email confirmation.
+secret: a_very_important_secret
+
 # Default redirection URL
 #
 # If user tries to authenticate without any referer, Authelia

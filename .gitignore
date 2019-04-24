@@ -39,3 +39,8 @@ users_database.test.yml
 
 .suite
 .kube
+
+# Go binary
+authelia
+
+.authelia-interrupt

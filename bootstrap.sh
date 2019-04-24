@@ -3,9 +3,6 @@ export PATH=$(pwd)/scripts:/tmp:$PATH
 
 export PS1="(authelia) $PS1"
 
-echo "[BOOTSTRAP] Installing npm packages..."
-npm i
-
 pushd client
 npm i
 popd

@@ -37,7 +37,6 @@ export default function() {
     before(async function() {
       const secret = await LoginAndRegisterTotp(this.driver, "john", "password", true);
       await VisitPageAndWaitUrlIs(this.driver, 'https://login.example.com:8080/#/');
-      await FillLoginPageAndClick(this.driver, 'john', 'password', false);
       await ValidateTotp(this.driver, secret);
       // Default URL in conf is home.
       await VerifyUrlIs(this.driver, 'https://home.example.com:8080/');
