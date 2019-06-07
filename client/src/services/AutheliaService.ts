@@ -183,8 +183,8 @@ class AutheliaService {
   }
 
   static async fetchPrefered2faMethod(): Promise<Method2FA> {
-    const res = await this.fetchSafeJson<{preference: Method2FA}>('/api/secondfactor/preferences');
-    return res.preference;
+    const res = await this.fetchSafeJson<{method: Method2FA}>('/api/secondfactor/preferences');
+    return res.method;
   }
 
   static async setPrefered2faMethod(method: Method2FA): Promise<void> {

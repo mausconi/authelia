@@ -6,6 +6,8 @@ port: 9091
 
 logs_level: debug
 
+secret: unsecure_secret
+
 authentication_backend:
   file:
     path: ./test/suites/basic/users_database.test.yml

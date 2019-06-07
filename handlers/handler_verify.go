@@ -220,7 +220,8 @@ func VerifyGet(ctx *middlewares.AutheliaCtx) {
 		username, groups, authLevel, err = verifyFromSessionCookie(*targetURL, ctx)
 	}
 
-	authorization := isTargetURLAuthorized(ctx.Providers.Authorizer, *targetURL, username, groups, ctx.RemoteIP(), authLevel)
+	authorization := isTargetURLAuthorized(ctx.Providers.Authorizer, *targetURL, username,
+		groups, ctx.RemoteIP(), authLevel)
 
 	if authorization == Forbidden {
 		ctx.ReplyForbidden()

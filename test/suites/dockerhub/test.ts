@@ -22,6 +22,6 @@ AutheliaSuite(__dirname, function() {
     });
   });
 
-  describe('Single-factor authentication', SingleFactorAuthentication())
-  describe('Two-factor authentication', TwoFactorAuthentication());
+  // describe('Single-factor authentication', SingleFactorAuthentication())
+  // describe('Two-factor authentication', TwoFactorAuthentication());
 });

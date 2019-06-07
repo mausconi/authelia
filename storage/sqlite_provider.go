@@ -20,7 +20,7 @@ func NewSQLiteProvider(path string) *SQLiteProvider {
 	provider := SQLiteProvider{}
 	err := provider.initialize(path)
 	if err != nil {
-		logging.Logger().Fatal(err)
+		logging.Logger().Fatalf("Unable to create SQLite database %s: %s", path, err)
 	}
 	return &provider
 }

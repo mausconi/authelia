@@ -41,7 +41,7 @@ export default function() {
     });
   })
 
-  describe.only("Client 1 (from network 192.168.240.201/32)", function() {
+  describe("Client 1 (from network 192.168.240.201/32)", function() {
     before(async function() {
       this.client1 = await createClient(1);
     });

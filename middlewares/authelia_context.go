@@ -3,6 +3,8 @@ package middlewares
 import (
 	"encoding/json"
 	"fmt"
+	"net"
+	"strings"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/clems4ever/authelia/session"
@@ -128,4 +130,17 @@ func (c *AutheliaCtx) SetJSONBody(value interface{}) error {
 	c.SetContentType("application/json")
 	c.SetBody(b)
 	return nil
+}
+
+// RemoteIP return the remote IP taking X-Forwarded-For header into account if provided.
+func (c *AutheliaCtx) RemoteIP() net.IP {
+	XForwardedFor := c.RequestCtx.Request.Header.Peek("X-Forwarded-For")
+	if XForwardedFor != nil {
+		ips := strings.Split(string(XForwardedFor), ",")
+
+		if len(ips) > 0 {
+			return net.ParseIP(strings.Trim(ips[0], " "))
+		}
+	}
+	return c.RequestCtx.RemoteIP()
 }
