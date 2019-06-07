@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"testing"
 
@@ -140,7 +141,7 @@ func TestShouldCheckAuthorizationMatching(t *testing.T) {
 			username = "john"
 		}
 
-		matching := isTargetURLAuthorized(authorizer, *url, username, []string{}, rule.AuthLevel)
+		matching := isTargetURLAuthorized(authorizer, *url, username, []string{}, net.ParseIP("127.0.0.1"), rule.AuthLevel)
 		assert.Equal(t, rule.ExpectedMatching, matching, "policy=%s, authLevel=%v, expected=%v, actual=%v",
 			rule.Policy, rule.AuthLevel, rule.ExpectedMatching, matching)
 	}
@@ -156,61 +157,68 @@ func TestShouldVerifyWrongCredentials(t *testing.T) {
 		Return(false, nil)
 
 	url, _ := url.ParseRequestURI("https://test.example.com")
-	verifyBasicAuth([]byte("Basic am9objpwYXNzd29yZA=="), *url, mock.Ctx)
+	_, _, _, err := verifyBasicAuth([]byte("Basic am9objpwYXNzd29yZA=="), *url, mock.Ctx)
 
-	assert.Equal(t, 401, mock.Ctx.Response.StatusCode())
+	assert.Error(t, err)
+}
+
+type TestCase struct {
+	URL                string
+	Authorization      string
+	ExpectedStatusCode int
+}
+
+func (tc TestCase) String() string {
+	return fmt.Sprintf("url=%s, auth=%s, exp_status=%d", tc.URL, tc.Authorization, tc.ExpectedStatusCode)
 }
 
 func TestShouldVerifyAuthorizationsUsingBasicAuth(t *testing.T) {
-	type Pair struct {
-		URL                string
-		Authorization      string
-		ExpectedStatusCode int
-	}
-
-	testCases := []Pair{
+	testCases := []TestCase{
 		// Authorization has bad format.
-		Pair{"https://bypass.example.com", "Basic am9objpaaaaaaaaaaaaaa", 500},
+		TestCase{"https://bypass.example.com", "Basic am9objpaaaaaaaaaaaaaaaa", 401},
 
 		// Correct Authorization
-		Pair{"https://test.example.com", "Basic am9objpwYXNzd29yZA==", 403},
-		Pair{"https://bypass.example.com", "Basic am9objpwYXNzd29yZA==", 200},
-		Pair{"https://one-factor.example.com", "Basic am9objpwYXNzd29yZA==", 200},
-		Pair{"https://two-factor.example.com", "Basic am9objpwYXNzd29yZA==", 401},
-		Pair{"https://deny.example.com", "Basic am9objpwYXNzd29yZA==", 403},
+		TestCase{"https://test.example.com", "Basic am9objpwYXNzd29yZA==", 403},
+		TestCase{"https://bypass.example.com", "Basic am9objpwYXNzd29yZA==", 200},
+		TestCase{"https://one-factor.example.com", "Basic am9objpwYXNzd29yZA==", 200},
+		TestCase{"https://two-factor.example.com", "Basic am9objpwYXNzd29yZA==", 401},
+		TestCase{"https://deny.example.com", "Basic am9objpwYXNzd29yZA==", 403},
 	}
 
 	for _, testCase := range testCases {
-		mock := mocks.NewMockAutheliaCtx(t)
-		defer mock.Close()
+		testCase := testCase
+		t.Run(testCase.String(), func(t *testing.T) {
+			mock := mocks.NewMockAutheliaCtx(t)
+			defer mock.Close()
 
-		mock.UserProviderMock.EXPECT().
-			CheckUserPassword(gomock.Eq("john"), gomock.Eq("password")).
-			Return(true, nil)
+			mock.UserProviderMock.EXPECT().
+				CheckUserPassword(gomock.Eq("john"), gomock.Eq("password")).
+				Return(true, nil)
 
-		details := authentication.UserDetails{
-			Emails: []string{"john@example.com"},
-			Groups: []string{"dev", "admin"},
-		}
-		mock.UserProviderMock.EXPECT().
-			GetDetails(gomock.Eq("john")).
-			Return(&details, nil)
+			details := authentication.UserDetails{
+				Emails: []string{"john@example.com"},
+				Groups: []string{"dev", "admin"},
+			}
+			mock.UserProviderMock.EXPECT().
+				GetDetails(gomock.Eq("john")).
+				Return(&details, nil)
 
-		mock.Ctx.Request.Header.Set("Proxy-Authorization", testCase.Authorization)
-		mock.Ctx.Request.Header.Set("X-Original-URL", testCase.URL)
+			mock.Ctx.Request.Header.Set("Proxy-Authorization", testCase.Authorization)
+			mock.Ctx.Request.Header.Set("X-Original-URL", testCase.URL)
 
-		VerifyGet(mock.Ctx)
-		expStatus, actualStatus := testCase.ExpectedStatusCode, mock.Ctx.Response.StatusCode()
-		assert.Equal(t, expStatus, actualStatus, "URL=%s -> StatusCode=%d != ExpectedStatusCode=%d",
-			testCase.URL, actualStatus, expStatus)
+			VerifyGet(mock.Ctx)
+			expStatus, actualStatus := testCase.ExpectedStatusCode, mock.Ctx.Response.StatusCode()
+			assert.Equal(t, expStatus, actualStatus, "URL=%s -> StatusCode=%d != ExpectedStatusCode=%d",
+				testCase.URL, actualStatus, expStatus)
 
-		if testCase.ExpectedStatusCode == 200 {
-			assert.Equal(t, []byte("john"), mock.Ctx.Response.Header.Peek("Remote-User"))
-			assert.Equal(t, []byte("dev,admin"), mock.Ctx.Response.Header.Peek("Remote-Groups"))
-		} else {
-			assert.Equal(t, []byte(nil), mock.Ctx.Response.Header.Peek("Remote-User"))
-			assert.Equal(t, []byte(nil), mock.Ctx.Response.Header.Peek("Remote-Groups"))
-		}
+			if testCase.ExpectedStatusCode == 200 {
+				assert.Equal(t, []byte("john"), mock.Ctx.Response.Header.Peek("Remote-User"))
+				assert.Equal(t, []byte("dev,admin"), mock.Ctx.Response.Header.Peek("Remote-Groups"))
+			} else {
+				assert.Equal(t, []byte(nil), mock.Ctx.Response.Header.Peek("Remote-User"))
+				assert.Equal(t, []byte(nil), mock.Ctx.Response.Header.Peek("Remote-Groups"))
+			}
+		})
 	}
 }
 
@@ -243,7 +251,7 @@ func TestShouldVerifyFailingPasswordCheckingInBasicAuth(t *testing.T) {
 	mock.Ctx.Request.Header.Set("X-Original-URL", "https://test.example.com")
 
 	VerifyGet(mock.Ctx)
-	expStatus, actualStatus := 500, mock.Ctx.Response.StatusCode()
+	expStatus, actualStatus := 401, mock.Ctx.Response.StatusCode()
 	assert.Equal(t, expStatus, actualStatus, "URL=%s -> StatusCode=%d != ExpectedStatusCode=%d",
 		"https://test.example.com", actualStatus, expStatus)
 }
@@ -264,19 +272,24 @@ func TestShouldVerifyFailingDetailsFetchingInBasicAuth(t *testing.T) {
 	mock.Ctx.Request.Header.Set("X-Original-URL", "https://test.example.com")
 
 	VerifyGet(mock.Ctx)
-	expStatus, actualStatus := 500, mock.Ctx.Response.StatusCode()
+	expStatus, actualStatus := 401, mock.Ctx.Response.StatusCode()
 	assert.Equal(t, expStatus, actualStatus, "URL=%s -> StatusCode=%d != ExpectedStatusCode=%d",
 		"https://test.example.com", actualStatus, expStatus)
 }
 
-func TestShouldVerifyAuthorizationsUsingSessionCookie(t *testing.T) {
-	type Pair struct {
-		URL                 string
-		Username            string
-		AuthenticationLevel authentication.Level
-		ExpectedStatusCode  int
-	}
+type Pair struct {
+	URL                 string
+	Username            string
+	AuthenticationLevel authentication.Level
+	ExpectedStatusCode  int
+}
 
+func (p Pair) String() string {
+	return fmt.Sprintf("url=%s, username=%s, auth_lvl=%d, exp_status=%d",
+		p.URL, p.Username, p.AuthenticationLevel, p.ExpectedStatusCode)
+}
+
+func TestShouldVerifyAuthorizationsUsingSessionCookie(t *testing.T) {
 	testCases := []Pair{
 		Pair{"https://test.example.com", "", authentication.NotAuthenticated, 401},
 		Pair{"https://bypass.example.com", "", authentication.NotAuthenticated, 200},
@@ -298,25 +311,28 @@ func TestShouldVerifyAuthorizationsUsingSessionCookie(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		mock := mocks.NewMockAutheliaCtx(t)
-		defer mock.Close()
+		testCase := testCase
+		t.Run(testCase.String(), func(t *testing.T) {
+			mock := mocks.NewMockAutheliaCtx(t)
+			defer mock.Close()
 
-		userSession := mock.Ctx.GetSession()
-		userSession.Username = testCase.Username
-		userSession.AuthenticationLevel = testCase.AuthenticationLevel
-		mock.Ctx.SaveSession(userSession)
+			userSession := mock.Ctx.GetSession()
+			userSession.Username = testCase.Username
+			userSession.AuthenticationLevel = testCase.AuthenticationLevel
+			mock.Ctx.SaveSession(userSession)
 
-		mock.Ctx.Request.Header.Set("X-Original-URL", testCase.URL)
+			mock.Ctx.Request.Header.Set("X-Original-URL", testCase.URL)
 
-		VerifyGet(mock.Ctx)
-		expStatus, actualStatus := testCase.ExpectedStatusCode, mock.Ctx.Response.StatusCode()
-		assert.Equal(t, expStatus, actualStatus, "URL=%s -> AuthLevel=%d, StatusCode=%d != ExpectedStatusCode=%d",
-			testCase.URL, testCase.AuthenticationLevel, actualStatus, expStatus)
+			VerifyGet(mock.Ctx)
+			expStatus, actualStatus := testCase.ExpectedStatusCode, mock.Ctx.Response.StatusCode()
+			assert.Equal(t, expStatus, actualStatus, "URL=%s -> AuthLevel=%d, StatusCode=%d != ExpectedStatusCode=%d",
+				testCase.URL, testCase.AuthenticationLevel, actualStatus, expStatus)
 
-		if testCase.ExpectedStatusCode == 200 && testCase.Username != "" {
-			assert.Equal(t, []byte(testCase.Username), mock.Ctx.Response.Header.Peek("Remote-User"))
-		} else {
-			assert.Equal(t, []byte(nil), mock.Ctx.Response.Header.Peek("Remote-User"))
-		}
+			if testCase.ExpectedStatusCode == 200 && testCase.Username != "" {
+				assert.Equal(t, []byte(testCase.Username), mock.Ctx.Response.Header.Peek("Remote-User"))
+			} else {
+				assert.Equal(t, []byte(nil), mock.Ctx.Response.Header.Peek("Remote-User"))
+			}
+		})
 	}
 }

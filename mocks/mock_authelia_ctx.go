@@ -1,9 +1,12 @@
 package mocks
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/clems4ever/authelia/regulation"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/clems4ever/authelia/authorization"
 	"github.com/clems4ever/authelia/configuration/schema"
@@ -90,4 +93,23 @@ func NewMockAutheliaCtx(t *testing.T) *MockAutheliaCtx {
 // Close close the mock
 func (m *MockAutheliaCtx) Close() {
 	m.Hook.Reset()
+}
+
+// Assert200KO assert an error response from the service.
+func (m *MockAutheliaCtx) Assert200KO(t *testing.T, message string) {
+	assert.Equal(t, 200, m.Ctx.Response.StatusCode())
+	assert.Equal(t, fmt.Sprintf("{\"status\":\"KO\",\"message\":\"%s\"}", message), string(m.Ctx.Response.Body()))
+}
+
+func (m *MockAutheliaCtx) Assert200OK(t *testing.T, data interface{}) {
+	assert.Equal(t, 200, m.Ctx.Response.StatusCode())
+	response := middlewares.OKResponse{
+		Status: "OK",
+		Data:   data,
+	}
+
+	b, err := json.Marshal(response)
+
+	assert.NoError(t, err)
+	assert.Equal(t, string(b), string(m.Ctx.Response.Body()))
 }

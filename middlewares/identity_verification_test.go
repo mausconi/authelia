@@ -42,7 +42,8 @@ func TestShouldFailStartingProcessIfUserHasNoEmailAddress(t *testing.T) {
 
 	middlewares.IdentityVerificationStart(newArgs(retriever))(mock.Ctx)
 
-	assert.Equal(t, 500, mock.Ctx.Response.StatusCode())
+	// Return 200 KO
+	assert.Equal(t, 200, mock.Ctx.Response.StatusCode())
 	assert.Equal(t, "User does not have any email", mock.Hook.LastEntry().Message)
 }
 
@@ -59,7 +60,8 @@ func TestShouldFailIfJWTCannotBeSaved(t *testing.T) {
 	args := newArgs(defaultRetriever)
 	middlewares.IdentityVerificationStart(args)(mock.Ctx)
 
-	assert.Equal(t, 500, mock.Ctx.Response.StatusCode())
+	// Return 200 KO
+	assert.Equal(t, 200, mock.Ctx.Response.StatusCode())
 	assert.Equal(t, "cannot save", mock.Hook.LastEntry().Message)
 }
 
@@ -80,7 +82,8 @@ func TestShouldFailSendingAnEmail(t *testing.T) {
 	args := newArgs(defaultRetriever)
 	middlewares.IdentityVerificationStart(args)(mock.Ctx)
 
-	assert.Equal(t, 500, mock.Ctx.Response.StatusCode())
+	// Return 200 KO
+	assert.Equal(t, 200, mock.Ctx.Response.StatusCode())
 	assert.Equal(t, "no notif", mock.Hook.LastEntry().Message)
 }
 
@@ -148,7 +151,7 @@ func newFinishArgs() middlewares.IdentityVerificationFinishArgs {
 func (s *IdentityVerificationFinishProcess) TestShouldFailIfJSONBodyIsMalformed() {
 	middlewares.IdentityVerificationFinish(newFinishArgs(), next)(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
+	s.mock.Assert200KO(s.T(), "Operation failed")
 	assert.Equal(s.T(), "unexpected end of JSON input", s.mock.Hook.LastEntry().Message)
 }
 
@@ -156,7 +159,7 @@ func (s *IdentityVerificationFinishProcess) TestShouldFailIfTokenIsNotProvided()
 	s.mock.Ctx.Request.SetBodyString("{}")
 	middlewares.IdentityVerificationFinish(newFinishArgs(), next)(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
+	s.mock.Assert200KO(s.T(), "Operation failed")
 	assert.Equal(s.T(), "No token provided", s.mock.Hook.LastEntry().Message)
 }
 
@@ -169,8 +172,8 @@ func (s *IdentityVerificationFinishProcess) TestShouldFailIfTokenIsNotFoundInDB(
 
 	middlewares.IdentityVerificationFinish(newFinishArgs(), next)(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
-	assert.Equal(s.T(), "Token is not in DB, it might have expired", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "The identity verification token has already been used")
+	assert.Equal(s.T(), "Token is not in DB, it might have already been used", s.mock.Hook.LastEntry().Message)
 }
 
 func (s *IdentityVerificationFinishProcess) TestShouldFailIfTokenIsInvalid() {
@@ -182,7 +185,7 @@ func (s *IdentityVerificationFinishProcess) TestShouldFailIfTokenIsInvalid() {
 
 	middlewares.IdentityVerificationFinish(newFinishArgs(), next)(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
+	s.mock.Assert200KO(s.T(), "Operation failed")
 	assert.Equal(s.T(), "Cannot parse token", s.mock.Hook.LastEntry().Message)
 }
 
@@ -198,7 +201,7 @@ func (s *IdentityVerificationFinishProcess) TestShouldFailIfTokenExpired() {
 
 	middlewares.IdentityVerificationFinish(newFinishArgs(), next)(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
+	s.mock.Assert200KO(s.T(), "The identity verification token has expired")
 	assert.Equal(s.T(), "Token expired", s.mock.Hook.LastEntry().Message)
 }
 
@@ -213,7 +216,7 @@ func (s *IdentityVerificationFinishProcess) TestShouldFailForWrongAction() {
 
 	middlewares.IdentityVerificationFinish(newFinishArgs(), next)(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
+	s.mock.Assert200KO(s.T(), "Operation failed")
 	assert.Equal(s.T(), "This token has not been generated for this kind of action", s.mock.Hook.LastEntry().Message)
 }
 
@@ -230,7 +233,7 @@ func (s *IdentityVerificationFinishProcess) TestShouldFailForWrongUser() {
 	args.IsTokenUserValidFunc = func(ctx *middlewares.AutheliaCtx, username string) bool { return false }
 	middlewares.IdentityVerificationFinish(args, next)(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
+	s.mock.Assert200KO(s.T(), "Operation failed")
 	assert.Equal(s.T(), "This token has not been generated for this user", s.mock.Hook.LastEntry().Message)
 }
 
@@ -249,7 +252,7 @@ func (s *IdentityVerificationFinishProcess) TestShouldFailIfTokenCannotBeRemoved
 
 	middlewares.IdentityVerificationFinish(newFinishArgs(), next)(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
+	s.mock.Assert200KO(s.T(), "Operation failed")
 	assert.Equal(s.T(), "cannot remove", s.mock.Hook.LastEntry().Message)
 }
 

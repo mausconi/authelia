@@ -32,12 +32,20 @@ func (s *StateGetSuite) TestShouldReturnUsernameFromSession() {
 
 	StateGet(s.mock.Ctx)
 
-	expectedBody := StateResponse{
-		Username:              "username",
-		DefaultRedirectionURL: "",
-		AuthenticationLevel:   authentication.NotAuthenticated,
+	type Response struct {
+		Status string
+		Data   StateResponse
 	}
-	actualBody := StateResponse{}
+
+	expectedBody := Response{
+		Status: "OK",
+		Data: StateResponse{
+			Username:              "username",
+			DefaultRedirectionURL: "",
+			AuthenticationLevel:   authentication.NotAuthenticated,
+		},
+	}
+	actualBody := Response{}
 
 	json.Unmarshal(s.mock.Ctx.Response.Body(), &actualBody)
 	assert.Equal(s.T(), 200, s.mock.Ctx.Response.StatusCode())
@@ -52,12 +60,20 @@ func (s *StateGetSuite) TestShouldReturnAuthenticationLevelFromSession() {
 
 	StateGet(s.mock.Ctx)
 
-	expectedBody := StateResponse{
-		Username:              "",
-		DefaultRedirectionURL: "",
-		AuthenticationLevel:   authentication.OneFactor,
+	type Response struct {
+		Status string
+		Data   StateResponse
 	}
-	actualBody := StateResponse{}
+
+	expectedBody := Response{
+		Status: "OK",
+		Data: StateResponse{
+			Username:              "",
+			DefaultRedirectionURL: "",
+			AuthenticationLevel:   authentication.OneFactor,
+		},
+	}
+	actualBody := Response{}
 
 	json.Unmarshal(s.mock.Ctx.Response.Body(), &actualBody)
 	assert.Equal(s.T(), 200, s.mock.Ctx.Response.StatusCode())

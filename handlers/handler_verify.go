@@ -220,6 +220,12 @@ func VerifyGet(ctx *middlewares.AutheliaCtx) {
 		username, groups, authLevel, err = verifyFromSessionCookie(*targetURL, ctx)
 	}
 
+	if err != nil {
+		ctx.Logger.Error(fmt.Sprintf("Error caught when verifying user authorization: %s", err))
+		ctx.ReplyUnauthorized()
+		return
+	}
+
 	authorization := isTargetURLAuthorized(ctx.Providers.Authorizer, *targetURL, username,
 		groups, ctx.RemoteIP(), authLevel)
 
@@ -240,6 +246,8 @@ func VerifyGet(ctx *middlewares.AutheliaCtx) {
 			ctx.ReplyUnauthorized()
 			ctx.Logger.Errorf("Access to %s is not authorized to user %s", targetURL.String(), username)
 		}
+	} else if authorization == Authorized {
+		setForwardedHeaders(&ctx.Response.Header, username, groups)
 	}
 
 	if !hasBasicAuth {
@@ -253,6 +261,4 @@ func VerifyGet(ctx *middlewares.AutheliaCtx) {
 		ctx.Error(fmt.Errorf("Unable to update last activity: %s", err), operationFailedMessage)
 		return
 	}
-
-	setForwardedHeaders(&ctx.Response.Header, username, groups)
 }

@@ -37,8 +37,9 @@ func (s *FirstFactorSuite) assertError500(err string) {
 func (s *FirstFactorSuite) TestShouldFailIfBodyIsNil() {
 	FirstFactorPost(s.mock.Ctx)
 
-	// No body.
-	s.assertError500("unexpected end of JSON input")
+	// No body
+	assert.Equal(s.T(), "Unable to parse body: unexpected end of JSON input", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Authentication failed. Check your credentials.")
 }
 
 func (s *FirstFactorSuite) TestShouldFailIfBodyIsInBadFormat() {
@@ -48,7 +49,8 @@ func (s *FirstFactorSuite) TestShouldFailIfBodyIsInBadFormat() {
 	}`)
 	FirstFactorPost(s.mock.Ctx)
 
-	s.assertError500("password: non zero value required")
+	assert.Equal(s.T(), "Unable to validate body: password: non zero value required", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Authentication failed. Check your credentials.")
 }
 
 func (s *FirstFactorSuite) TestShouldFailIfUserProviderCheckPasswordFail() {
@@ -64,7 +66,8 @@ func (s *FirstFactorSuite) TestShouldFailIfUserProviderCheckPasswordFail() {
 	}`)
 	FirstFactorPost(s.mock.Ctx)
 
-	s.assertError500("Error while checking password for user test: Failed")
+	assert.Equal(s.T(), "Error while checking password for user test: Failed", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Authentication failed. Check your credentials.")
 }
 
 func (s *FirstFactorSuite) TestShouldFailIfUserProviderGetDetailsFail() {
@@ -90,7 +93,8 @@ func (s *FirstFactorSuite) TestShouldFailIfUserProviderGetDetailsFail() {
 	}`)
 	FirstFactorPost(s.mock.Ctx)
 
-	s.assertError500("Error while retrieving details from user test: Failed")
+	assert.Equal(s.T(), "Error while retrieving details from user test: Failed", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Authentication failed. Check your credentials.")
 }
 
 func (s *FirstFactorSuite) TestShouldFailIfAuthenticationLoggingFail() {
@@ -116,7 +120,8 @@ func (s *FirstFactorSuite) TestShouldFailIfAuthenticationLoggingFail() {
 	}`)
 	FirstFactorPost(s.mock.Ctx)
 
-	s.assertError500("failed")
+	assert.Equal(s.T(), "Unable to mark authentication: failed", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Authentication failed. Check your credentials.")
 }
 
 func (s *FirstFactorSuite) TestShouldAuthenticateUser() {
@@ -147,7 +152,7 @@ func (s *FirstFactorSuite) TestShouldAuthenticateUser() {
 
 	// Respond with 200.
 	assert.Equal(s.T(), 200, s.mock.Ctx.Response.StatusCode())
-	assert.Equal(s.T(), []byte("{\"message\":\"OK\"}"), s.mock.Ctx.Response.Body())
+	assert.Equal(s.T(), []byte("{\"status\":\"OK\"}"), s.mock.Ctx.Response.Body())
 
 	// And store authentication in session.
 	session := s.mock.Ctx.GetSession()

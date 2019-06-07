@@ -39,7 +39,7 @@ func (s *SecondFactorPreferencesSuite) TestShouldGetPreferenceRetrievedFromStora
 		Return("u2f", nil)
 	SecondFactorPreferencesGet(s.mock.Ctx)
 
-	assert.Equal(s.T(), "{\"method\":\"u2f\"}", string(s.mock.Ctx.Response.Body()))
+	s.mock.Assert200OK(s.T(), preferences{Method: "u2f"})
 }
 
 func (s *SecondFactorPreferencesSuite) TestShouldGetDefaultPreferenceIfNotInDB() {
@@ -48,7 +48,7 @@ func (s *SecondFactorPreferencesSuite) TestShouldGetDefaultPreferenceIfNotInDB()
 		Return("", nil)
 	SecondFactorPreferencesGet(s.mock.Ctx)
 
-	assert.Equal(s.T(), "{\"method\":\"totp\"}", string(s.mock.Ctx.Response.Body()))
+	s.mock.Assert200OK(s.T(), preferences{Method: "totp"})
 }
 
 func (s *SecondFactorPreferencesSuite) TestShouldReturnError500WhenStorageFailsToLoad() {
@@ -57,8 +57,8 @@ func (s *SecondFactorPreferencesSuite) TestShouldReturnError500WhenStorageFailsT
 		Return("", fmt.Errorf("Failure"))
 	SecondFactorPreferencesGet(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
-	assert.Equal(s.T(), "Failure", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Operation failed.")
+	assert.Equal(s.T(), "Unable to load prefered 2FA method: Failure", s.mock.Hook.LastEntry().Message)
 	assert.Equal(s.T(), logrus.ErrorLevel, s.mock.Hook.LastEntry().Level)
 }
 
@@ -67,8 +67,8 @@ func (s *SecondFactorPreferencesSuite) TestShouldReturnError500WhenStorageFailsT
 func (s *SecondFactorPreferencesSuite) TestShouldReturnError500WhenNoBodyProvided() {
 	SecondFactorPreferencesPost(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
-	assert.Equal(s.T(), "unexpected end of JSON input", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Operation failed.")
+	assert.Equal(s.T(), "Unable to parse body: unexpected end of JSON input", s.mock.Hook.LastEntry().Message)
 	assert.Equal(s.T(), logrus.ErrorLevel, s.mock.Hook.LastEntry().Level)
 }
 
@@ -76,8 +76,8 @@ func (s *SecondFactorPreferencesSuite) TestShouldReturnError500WhenMalformedBody
 	s.mock.Ctx.Request.SetBody([]byte("{\"method\":\"abc\""))
 	SecondFactorPreferencesPost(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
-	assert.Equal(s.T(), "unexpected end of JSON input", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Operation failed.")
+	assert.Equal(s.T(), "Unable to parse body: unexpected end of JSON input", s.mock.Hook.LastEntry().Message)
 	assert.Equal(s.T(), logrus.ErrorLevel, s.mock.Hook.LastEntry().Level)
 }
 
@@ -85,8 +85,8 @@ func (s *SecondFactorPreferencesSuite) TestShouldReturnError500WhenBadBodyProvid
 	s.mock.Ctx.Request.SetBody([]byte("{\"weird_key\":\"abc\"}"))
 	SecondFactorPreferencesPost(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
-	assert.Equal(s.T(), "method: non zero value required", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Operation failed.")
+	assert.Equal(s.T(), "Unable to validate body: method: non zero value required", s.mock.Hook.LastEntry().Message)
 	assert.Equal(s.T(), logrus.ErrorLevel, s.mock.Hook.LastEntry().Level)
 }
 
@@ -94,7 +94,7 @@ func (s *SecondFactorPreferencesSuite) TestShouldReturnError500WhenBadMethodProv
 	s.mock.Ctx.Request.SetBody([]byte("{\"method\":\"abc\"}"))
 	SecondFactorPreferencesPost(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
+	s.mock.Assert200KO(s.T(), "Operation failed.")
 	assert.Equal(s.T(), "Unknown method abc, it should be either u2f, totp or duo_push", s.mock.Hook.LastEntry().Message)
 	assert.Equal(s.T(), logrus.ErrorLevel, s.mock.Hook.LastEntry().Level)
 }
@@ -107,12 +107,12 @@ func (s *SecondFactorPreferencesSuite) TestShouldReturnError500WhenDatabaseFails
 
 	SecondFactorPreferencesPost(s.mock.Ctx)
 
-	assert.Equal(s.T(), 500, s.mock.Ctx.Response.StatusCode())
-	assert.Equal(s.T(), "Failure", s.mock.Hook.LastEntry().Message)
+	s.mock.Assert200KO(s.T(), "Operation failed.")
+	assert.Equal(s.T(), "Unable to save new prefered 2FA method: Failure", s.mock.Hook.LastEntry().Message)
 	assert.Equal(s.T(), logrus.ErrorLevel, s.mock.Hook.LastEntry().Level)
 }
 
-func (s *SecondFactorPreferencesSuite) TestShouldReturn204WhenMethodIsSuccessfullySaved() {
+func (s *SecondFactorPreferencesSuite) TestShouldReturn200WhenMethodIsSuccessfullySaved() {
 	s.mock.Ctx.Request.SetBody([]byte("{\"method\":\"u2f\"}"))
 	s.mock.StorageProviderMock.EXPECT().
 		SavePrefered2FAMethod(gomock.Eq("john"), gomock.Eq("u2f")).

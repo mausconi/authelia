@@ -6,7 +6,6 @@ import (
 	"github.com/clems4ever/authelia/mocks"
 
 	"github.com/clems4ever/authelia/configuration/schema"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -26,8 +25,7 @@ func (s *SecondFactorAvailableMethodsFixture) TearDownTest() {
 
 func (s *SecondFactorAvailableMethodsFixture) TestShouldServeDefaultMethods() {
 	SecondFactorAvailableMethodsGet(s.mock.Ctx)
-
-	assert.Equal(s.T(), "[\"totp\",\"u2f\"]", string(s.mock.Ctx.Response.Body()))
+	s.mock.Assert200OK(s.T(), []string{"totp", "u2f"})
 }
 
 func (s *SecondFactorAvailableMethodsFixture) TestShouldServeDefaultMethodsAndDuo() {
@@ -35,8 +33,7 @@ func (s *SecondFactorAvailableMethodsFixture) TestShouldServeDefaultMethodsAndDu
 		DuoAPI: &schema.DuoAPIConfiguration{},
 	}
 	SecondFactorAvailableMethodsGet(s.mock.Ctx)
-
-	assert.Equal(s.T(), "[\"totp\",\"u2f\",\"duo_push\"]", string(s.mock.Ctx.Response.Body()))
+	s.mock.Assert200OK(s.T(), []string{"totp", "u2f", "duo_push"})
 }
 
 func TestRunSuite(t *testing.T) {
