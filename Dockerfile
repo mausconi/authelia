@@ -1,19 +1,15 @@
-FROM node:8.7.0-alpine
+FROM alpine:3.9.4
 
-WORKDIR /usr/src
+WORKDIR /usr/app
 
-COPY package.json /usr/src/package.json
+RUN apk --no-cache add ca-certificates
 
-RUN apk --update add --no-cache --virtual \
-      .build-deps make g++ python && \
-    npm install --production && \
-    apk del .build-deps
-
-COPY dist/server /usr/src/server
+ADD dist/authelia authelia
+ADD dist/public_html public_html
 
 EXPOSE 9091
 
 VOLUME /etc/authelia
 VOLUME /var/lib/authelia
 
-CMD ["node", "server/src/index.js", "/etc/authelia/config.yml"]
+CMD ["./authelia", "-config", "/etc/authelia/config.yml"]
