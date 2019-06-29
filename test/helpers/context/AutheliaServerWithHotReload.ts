@@ -32,9 +32,10 @@ class AutheliaServerWithHotReload implements AutheliaServerInterface {
       ['run', 'main.go', '-config', this.configPath], {
         env: {
           ...process.env,
-          NODE_TLS_REJECT_UNAUTHORIZED: 0,
+          NODE_TLS_REJECT_UNAUTHORIZED: "0",
         },
       });
+    if (!this.serverProcess || !this.serverProcess.stdout || !this.serverProcess.stderr) return;
     this.serverProcess.stdout.pipe(process.stdout);
     this.serverProcess.stderr.pipe(process.stderr);
     this.serverProcess.on('exit', () => {
@@ -76,6 +77,7 @@ class AutheliaServerWithHotReload implements AutheliaServerInterface {
         'BROWSER': 'none'
       }
     });
+    if (!this.clientProcess || !this.clientProcess.stdout || !this.clientProcess.stderr) return;
     this.clientProcess.stdout.pipe(process.stdout);
     this.clientProcess.stderr.pipe(process.stderr);
     this.clientProcess.on('exit', () => {

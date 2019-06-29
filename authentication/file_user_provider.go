@@ -30,13 +30,13 @@ type DatabaseModel struct {
 }
 
 // NewFileUserProvider creates a new instance of FileUserProvider.
-func NewFileUserProvider(filepath string) FileUserProvider {
+func NewFileUserProvider(filepath string) *FileUserProvider {
 	database, err := readDatabase(filepath)
 	if err != nil {
 		// Panic since the file does not exist when Authelia is starting.
 		panic(err)
 	}
-	return FileUserProvider{
+	return &FileUserProvider{
 		path:     &filepath,
 		database: database,
 		lock:     &sync.Mutex{},

@@ -10,6 +10,8 @@ port: 9091
 # Level of verbosity for logs
 logs_level: debug
 
+secret: unsecure_secret
+
 # Default redirection URL
 #
 # If user tries to authenticate without any referer, Authelia
@@ -42,7 +44,7 @@ authentication_backend:
   # production.
   ldap:
     # The url of the ldap server
-    url: ldap://127.0.0.1
+    url: 127.0.0.1:389
 
     # The base dn for every entries
     base_dn: dc=example,dc=com
@@ -216,7 +218,7 @@ regulation:
   find_time: 15
 
   # The length of time before a banned user can login again.
-  ban_time: 5
+  ban_time: 30
 
 # Configuration of the storage backend used to store data and secrets.
 #

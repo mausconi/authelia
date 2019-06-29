@@ -1,7 +1,7 @@
 package schema
 
-// LdapAuthenticationBackendConfiguration represents the configuration related to LDAP server.
-type LdapAuthenticationBackendConfiguration struct {
+// LDAPAuthenticationBackendConfiguration represents the configuration related to LDAP server.
+type LDAPAuthenticationBackendConfiguration struct {
 	URL                string `yaml:"url"`
 	BaseDN             string `yaml:"base_dn"`
 	AdditionalUsersDN  string `yaml:"additional_users_dn"`
@@ -21,6 +21,6 @@ type FileAuthenticationBackendConfiguration struct {
 
 // AuthenticationBackendConfiguration represents the configuration related to the authentication backend.
 type AuthenticationBackendConfiguration struct {
-	Ldap *LdapAuthenticationBackendConfiguration `yaml:"ldap"`
+	Ldap *LDAPAuthenticationBackendConfiguration `yaml:"ldap"`
 	File *FileAuthenticationBackendConfiguration `yaml:"file"`
 }

@@ -15,6 +15,7 @@ func ResetPasswordPost(ctx *middlewares.AutheliaCtx) {
 	// request expire at some point because here it only expires when the cookie expires...
 	if userSession.PasswordResetUsername == nil {
 		ctx.Error(fmt.Errorf("No identity verification process has been initiated"), unableToResetPasswordMessage)
+		return
 	}
 
 	var requestBody resetPasswordStep2RequestBody
@@ -22,6 +23,7 @@ func ResetPasswordPost(ctx *middlewares.AutheliaCtx) {
 
 	if err != nil {
 		ctx.Error(err, unableToResetPasswordMessage)
+		return
 	}
 
 	err = ctx.Providers.UserProvider.UpdatePassword(*userSession.PasswordResetUsername, requestBody.Password)

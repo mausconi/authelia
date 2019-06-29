@@ -58,8 +58,14 @@ func main() {
 		logging.SetLevel(logrus.TraceLevel)
 	}
 
-	fileUserProvider := authentication.NewFileUserProvider(
-		"./test/suites/basic/users_database.test.yml")
+	var userProvider authentication.UserProvider
+
+	if config.AuthenticationBackend.File != nil {
+		userProvider = authentication.NewFileUserProvider(
+			"./test/suites/basic/users_database.test.yml")
+	} else if config.AuthenticationBackend.Ldap != nil {
+		userProvider = authentication.NewLDAPUserProvider(*config.AuthenticationBackend.Ldap)
+	}
 	storageProvider := storage.NewSQLiteProvider(config.Storage.Local.Path)
 	notifier := notification.NewSMTPNotifier(config.Notifier.SMTP)
 	authorizer := authorization.NewAuthorizer(*config.AccessControl)
@@ -68,7 +74,7 @@ func main() {
 
 	providers := middlewares.Providers{
 		Authorizer:      authorizer,
-		UserProvider:    &fileUserProvider,
+		UserProvider:    userProvider,
 		Regulator:       regulator,
 		StorageProvider: storageProvider,
 		Notifier:        notifier,

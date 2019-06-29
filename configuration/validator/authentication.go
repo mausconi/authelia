@@ -12,7 +12,7 @@ func validateFileAuthenticationBackend(configuration *schema.FileAuthenticationB
 	}
 }
 
-func validateLdapAuthenticationBackend(configuration *schema.LdapAuthenticationBackendConfiguration, validator *Validator) {
+func validateLdapAuthenticationBackend(configuration *schema.LDAPAuthenticationBackendConfiguration, validator *Validator) {
 	if configuration.URL == "" {
 		validator.Push(errors.New("Please provide a URL to the LDAP server"))
 	}
