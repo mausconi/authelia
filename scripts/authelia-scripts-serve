@@ -16,7 +16,12 @@ if (!config) {
   config = 'config.yml'; // set default config file.;
 }
 
-const server = spawn('./dist/authelia', ['-config', config]);
+const server = spawn('./dist/authelia', ['-config', config], {
+  env: {
+    ...process.env,
+    PUBLIC_DIR: "./dist/public_html"
+  }
+});
 
 server.stdout.pipe(process.stdout);
 server.stderr.pipe(process.stderr);

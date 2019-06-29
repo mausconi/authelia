@@ -10,6 +10,8 @@ const dockerEnv = new DockerEnvironment([
   'example/compose/nginx/portal/docker-compose.yml',
   'example/compose/squid/docker-compose.yml',
   'example/compose/smtp/docker-compose.yml',
+  // To debug headers
+  'example/compose/httpbin/docker-compose.yml',
 ])
 
 async function setup() {

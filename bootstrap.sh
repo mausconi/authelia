@@ -3,6 +3,8 @@ export PATH=$(pwd)/scripts:/tmp:$PATH
 
 export PS1="(authelia) $PS1"
 
+npm i
+
 pushd client
 npm i
 popd

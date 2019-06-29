@@ -9,7 +9,7 @@ import (
 	"github.com/clems4ever/authelia/handlers"
 	"github.com/clems4ever/authelia/logging"
 	"github.com/clems4ever/authelia/middlewares"
-	"github.com/duosecurity/duo_api_golang"
+	duoapi "github.com/duosecurity/duo_api_golang"
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 )
@@ -20,7 +20,14 @@ func StartServer(configuration schema.Configuration, providers middlewares.Provi
 
 	autheliaMiddleware := middlewares.AutheliaMiddleware(configuration, providers)
 
-	router.GET("/", handlers.PortalGet)
+	publicDir := os.Getenv("PUBLIC_DIR")
+	if publicDir == "" {
+		publicDir = "./public_html"
+	}
+
+	router.GET("/", fasthttp.FSHandler(publicDir, 0))
+	router.ServeFiles("/static/*filepath", publicDir+"/static")
+
 	router.GET("/api/state", autheliaMiddleware(handlers.StateGet))
 
 	router.GET("/api/verify", autheliaMiddleware(handlers.VerifyGet))
