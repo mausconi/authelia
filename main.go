@@ -65,8 +65,16 @@ func main() {
 			"./test/suites/basic/users_database.test.yml")
 	} else if config.AuthenticationBackend.Ldap != nil {
 		userProvider = authentication.NewLDAPUserProvider(*config.AuthenticationBackend.Ldap)
+	} else {
+		panic("An authentication backend must be provided")
 	}
-	storageProvider := storage.NewSQLiteProvider(config.Storage.Local.Path)
+
+	var storageProvider storage.Provider
+	if config.Storage.Local != nil {
+		storageProvider = storage.NewSQLiteProvider(config.Storage.Local.Path)
+	} else {
+		storageProvider = storage.NewMongoProvider(*config.Storage.Mongo)
+	}
 	notifier := notification.NewSMTPNotifier(config.Notifier.SMTP)
 	authorizer := authorization.NewAuthorizer(*config.AccessControl)
 	sessionProvider := session.NewProvider(config.Session)

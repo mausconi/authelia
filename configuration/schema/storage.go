@@ -5,8 +5,8 @@ type MongoStorageConfiguration struct {
 	URL      string `yaml:"url"`
 	Database string `yaml:"database"`
 	Auth     struct {
-		username string `yaml:"username"`
-		password string `yaml:"password"`
+		Username string `yaml:"username"`
+		Password string `yaml:"password"`
 	} `yaml:"auth"`
 }
 
@@ -17,6 +17,6 @@ type LocalStorageConfiguration struct {
 
 // StorageConfiguration represents the configuration of the storage backend.
 type StorageConfiguration struct {
-	Mongo MongoStorageConfiguration
-	Local LocalStorageConfiguration
+	Mongo *MongoStorageConfiguration
+	Local *LocalStorageConfiguration
 }

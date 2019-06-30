@@ -55,7 +55,7 @@ type LdapAuthenticationBackendSuite struct {
 func (suite *LdapAuthenticationBackendSuite) SetupTest() {
 	suite.validator = NewValidator()
 	suite.configuration = schema.AuthenticationBackendConfiguration{}
-	suite.configuration.Ldap = &schema.LdapAuthenticationBackendConfiguration{}
+	suite.configuration.Ldap = &schema.LDAPAuthenticationBackendConfiguration{}
 	suite.configuration.Ldap.URL = "ldap://ldap"
 	suite.configuration.Ldap.User = "user"
 	suite.configuration.Ldap.Password = "password"
